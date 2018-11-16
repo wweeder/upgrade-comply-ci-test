@@ -1,0 +1,69 @@
+version: 2
+jobs:
+  build:
+    docker:
+      - image: debian:stretch
+    steps:
+      - checkout
+      - run:
+          name: orient base dir
+          command: pwd
+      - run:
+          name: identify repo objects 
+          command: ls
+      - add_ssh_keys:
+          fingerprints:
+            - "8b:10:7c:49:05:c3:a0:95:ba:7b:38:29:bc:47:6f:7d"
+      - run: echo "deb  http://deb.debian.org/debian  stretch main" >> /etc/apt/sources.list
+      - run: echo "deb-src  http://deb.debian.org/debian  stretch main" >> /etc/apt/sources.list
+      - run: cat /etc/apt/sources.list
+      - run: apt update
+      - run:
+          name: Install SCP 
+          command: apt -y install openssh-client 
+
+      - run:
+          name: Stop supervisorctl on core
+          command: |
+            chmod 600 ~/.ssh/id_*
+            ssh -o StrictHostKeyChecking=no circleci@comply-circleci-poc-core.dequelabs.com 'sudo supervisorctl stop all'
+
+      - run:
+          name: Execute update-comply.sh on core
+          command: |
+            chmod 600 ~/.ssh/id_*
+            ssh -o StrictHostKeyChecking=no circleci@comply-circleci-poc-core.dequelabs.com 'cd install-comply; sudo ./update-comply.sh core'
+
+      - run:
+          name: restart services on core
+          command: |
+            chmod 600 ~/.ssh/id_*
+            ssh -o StrictHostKeyChecking=no circleci@comply-circleci-poc-core.dequelabs.com 'cd install-comply; sudo ./start_order.sh core'
+
+      - run:
+          name: stop supervisorctl on analysis
+          command: |
+            chmod 600 ~/.ssh/id_*
+            ssh -o StrictHostKeyChecking=no circleci@comply-circleci-poc-analysis.dequelabs.com 'sudo supervisorctl stop all'
+
+      - run:
+          name: Execute update-comply.sh on analysis
+          command: |
+            chmod 600 ~/.ssh/id_*
+            ssh -o StrictHostKeyChecking=no circleci@comply-circleci-poc-analysis.dequelabs.com 'cd install-comply; sudo ./update-comply.sh selenium'
+
+      - run:
+          name: restart services on analysis 
+          command: |
+            chmod 600 ~/.ssh/id_*
+            ssh -o StrictHostKeyChecking=no circleci@comply-circleci-poc-analysis.dequelabs.com 'cd install-comply; sudo ./start_order.sh selenium'
+
+  deploy:
+    machine:
+        enabled: true
+    steps:
+      - run:
+          name: Execute SCP to EC2
+          command: |
+            chmod 600 ~/.ssh/id_*
+      
