@@ -23,16 +23,10 @@ jobs:
           command: apt -y install openssh-client 
 
       - run:
-          name: Stop supervisorctl on core
-          command: |
-            chmod 600 ~/.ssh/id_*
-            ssh -o StrictHostKeyChecking=no circleci@comply-qa-centos-core.dequelabs.com 'sudo supervisorctl stop all'
-
-      - run:
           name: Execute update-comply.sh on core
           command: |
             chmod 600 ~/.ssh/id_*
-            ssh -o StrictHostKeyChecking=no circleci@comply-qa-centos-core.dequelabs.com 'cd install-comply; sudo ./update-comply.sh core'
+            ssh -o StrictHostKeyChecking=no circleci@comply-qa-centos-core.dequelabs.com 'cd install-comply; sudo ./update-comply.sh core 6.2.1'
 
       - run:
           name: restart services on core
@@ -44,7 +38,7 @@ jobs:
           name: Execute update-comply.sh on analysis
           command: |
             chmod 600 ~/.ssh/id_*
-            ssh -o StrictHostKeyChecking=no circleci@comply-qa-centos-analysis.dequelabs.com 'cd install-comply; sudo ./update-comply.sh selenium'
+            ssh -o StrictHostKeyChecking=no circleci@comply-qa-centos-analysis.dequelabs.com 'cd install-comply; sudo ./update-comply.sh selenium 6.2.1'
 
       - run:
           name: restart services on analysis 
